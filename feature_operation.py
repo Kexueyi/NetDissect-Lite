@@ -1,7 +1,7 @@
 
 import os
 from torch.autograd import Variable as V
-from scipy.misc import imresize
+from PIL import Image
 import numpy as np
 import torch
 import settings
@@ -13,6 +13,7 @@ from loader.data_loader import load_csv
 from loader.data_loader import SegmentationData, SegmentationPrefetcher
 
 features_blobs = []
+
 def hook_feature(module, input, output):
     features_blobs.append(output.data.cpu().numpy())
 
@@ -63,8 +64,14 @@ class FeatureOperator:
             input.div_(255.0 * 0.224)
             if settings.GPU:
                 input = input.cuda()
-            input_var = V(input,volatile=True)
-            logit = model.forward(input_var)
+            with torch.no_grad():
+                input_var = V(input)
+            #! CVCL implementation
+            if settings.MODEL == 'cvcl':
+                logit = model.encode_image(input_var)
+                # print(f"CVCL model output shape: {logit.shape}")
+            else:
+                logit = model.forward(input_var)
             while np.isnan(logit.data.cpu().max()):
                 print("nan") #which I have no idea why it will happen
                 del features_blobs[:]
@@ -110,7 +117,7 @@ class FeatureOperator:
         quant = vecquantile.QuantileVector(depth=features.shape[1], seed=1)
         start_time = time.time()
         last_batch_time = start_time
-        batch_size = 64
+        batch_size = 256
         for i in range(0, features.shape[0], batch_size):
             batch_time = time.time()
             rate = i / (batch_time - start_time + 1e-15)
@@ -171,7 +178,10 @@ class FeatureOperator:
                 for unit_id in range(units):
                     feature_map = features[img_index][unit_id]
                     if feature_map.max() > threshold[unit_id]:
-                        mask = imresize(feature_map, (concept_map['sh'], concept_map['sw']), mode='F')
+                        # adaption to python 3.8 from python 3.6
+                        feature_map_image = Image.fromarray(feature_map)
+                        resized_feature_map = feature_map_image.resize((concept_map['sw'], concept_map['sh']), Image.BILINEAR)
+                        mask = np.array(resized_feature_map)
                         #reduction = int(round(settings.IMG_SIZE / float(concept_map['sh'])))
                         #mask = upsample.upsampleL(fieldmap, feature_map, shape=(concept_map['sh'], concept_map['sw']), reduction=reduction)
                         indexes = np.argwhere(mask > threshold[unit_id])
@@ -190,6 +200,8 @@ class FeatureOperator:
 
 
     def tally(self, features, threshold, savepath=''):
+        print("Feature shape", features.shape)
+        print("Unit number", features.shape[1])
         csvpath = os.path.join(settings.OUTPUT_FOLDER, savepath)
         if savepath and os.path.exists(csvpath):
             return load_csv(csvpath)

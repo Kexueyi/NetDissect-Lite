@@ -101,6 +101,13 @@ def bar_graph_svg(ed, blob,tally_result=None,
         else:
             filename = save
         ed.ensure_dir('html')
+    # print(f"Processed Labels: {label_counts}")
+    # print(f"Categories: {categories}")
+    # print(f"Heights: {heights}")
+    if not heights:
+        print("No data meets the threshold or other criteria for display.")
+        return "No data to display"
+    
     return make_svg_bargraph(labels, heights, categories,
             barheight, barwidth, show_labels, filename)
 

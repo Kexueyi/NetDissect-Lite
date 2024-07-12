@@ -1,25 +1,40 @@
 import settings
 import torch
 import torchvision
+from huggingface_hub import hf_hub_download
+from multimodal.multimodal_lit import MultiModalLitModel
 
 def loadmodel(hook_fn):
-    if settings.MODEL_FILE is None:
-        model = torchvision.models.__dict__[settings.MODEL](pretrained=True)
+    # Load CVCL
+    if settings.MODEL == 'cvcl':
+        checkpoint_name = "cvcl_s_dino_resnext50_embedding"
+        checkpoint = hf_hub_download(repo_id="wkvong/"+checkpoint_name, filename=checkpoint_name+".ckpt")
+        model = MultiModalLitModel.load_from_checkpoint(checkpoint_path=checkpoint)
     else:
-        checkpoint = torch.load(settings.MODEL_FILE)
-        if type(checkpoint).__name__ == 'OrderedDict' or type(checkpoint).__name__ == 'dict':
-            model = torchvision.models.__dict__[settings.MODEL](num_classes=settings.NUM_CLASSES)
-            if settings.MODEL_PARALLEL:
-                state_dict = {str.replace(k, 'module.', ''): v for k, v in checkpoint[
-                    'state_dict'].items()}  # the data parallel layer will add 'module' before each layer name
-            else:
-                state_dict = checkpoint
-            model.load_state_dict(state_dict)
+        # original model load
+        if settings.MODEL_FILE is None:
+            model = torchvision.models.__dict__[settings.MODEL](pretrained=True)
         else:
-            model = checkpoint
+            checkpoint = torch.load(settings.MODEL_FILE)
+            if isinstance(checkpoint, (dict, torch.OrderedDict)):
+                model = torchvision.models.__dict__[settings.MODEL](num_classes=settings.NUM_CLASSES)
+                if settings.MODEL_PARALLEL:
+                    state_dict = {k.replace('module.', ''): v for k, v in checkpoint['state_dict'].items()}
+                else:
+                    state_dict = checkpoint
+                model.load_state_dict(state_dict)
+            else:
+                model = checkpoint
+    
     for name in settings.FEATURE_NAMES:
-        model._modules.get(name).register_forward_hook(hook_fn)
+        module = dict(model.named_modules()).get(name)
+        if module:
+            module.register_forward_hook(hook_fn)
+            print(f"Hook registered for layer: {name}")
+        else:
+            print(f"Warning: Layer {name} does not exist in the model.")
     if settings.GPU:
         model.cuda()
+    
     model.eval()
     return model

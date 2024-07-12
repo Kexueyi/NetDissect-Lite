@@ -8,7 +8,7 @@ import csv
 import settings
 import numpy as np
 from collections import OrderedDict
-from scipy.misc import imread
+import imageio
 from multiprocessing import Pool, cpu_count
 from multiprocessing.pool import ThreadPool
 from scipy.ndimage.interpolation import zoom
@@ -198,7 +198,7 @@ class SegmentationData(AbstractSegmentation):
                 if isinstance(channel, int):
                     out[i] = channel
                 else:
-                    rgb = imread(os.path.join(directory, 'images', channel))
+                    rgb = imageio.imread(os.path.join(directory, 'images', channel))
                     out[i] = rgb[:,:,0] + rgb[:,:,1] * 256
             result[cat] = out
         return result, (row['sh'], row['sw'])
@@ -301,7 +301,7 @@ class SegmentationData(AbstractSegmentation):
                 channel = self.category_map[category][channel]
             out[:,:] = channel  # Single-label for the whole image
             return out
-        png = imread(os.path.join(self.directory, 'images', channel))
+        png = imageio.imread(os.path.join(self.directory, 'images', channel))
         if full:
             # Full case: just combine png channels.
             out[...] = png[:,:,0] + png[:,:,1] * 256
@@ -338,7 +338,7 @@ class SegmentationData(AbstractSegmentation):
                 if isinstance(channel, int):
                     out[i] = channel
                 else:
-                    png = imread(
+                    png = imageio.imread(
                             os.path.join(self.directory, 'images', channel))
                     out[i] = png[:,:,0] + png[:,:,1] * 256
                 i += 1
@@ -514,7 +514,7 @@ class SegmentationPrefetcher:
         while True:
             batch = self.fetch_batch()
             if batch is None:
-                raise StopIteration
+                return
             yield batch
 
     def fetch_batch(self):
@@ -541,7 +541,7 @@ class SegmentationPrefetcher:
             batch = self.fetch_tensor_batch(
                     bgr_mean=bgr_mean, global_labels=global_labels)
             if batch is None:
-                raise StopIteration
+                return
             yield batch
 
     def form_caffe_tensors(self, batch, bgr_mean=None, global_labels=False):
@@ -585,12 +585,13 @@ class SegmentationPrefetcher:
             self.result_queue.append(self.pool.map_async(prefetch_worker, data))
 
     def close(self):
-        while len(self.result_queue):
+        while self.result_queue:
             result = self.result_queue.pop(0)
             if result is not None:
                 result.wait(0.001)
         self.pool.close()
-        self.poool.cancel_join_thread()
+        self.pool.cancel_join_thread()  # 注意这里的拼写错误修正
+        self.pool.join()  # 确保进程池完全关闭
 
 def prefetch_worker(d):
     if d is None:
@@ -606,7 +607,7 @@ def prefetch_worker(d):
     segs['i'] = j
     segs['fn'] = fn
     if categories is None or 'image' in categories:
-        segs['image'] = imread(fn)
+        segs['image'] = imageio.imread(fn)
     return segs
 
 def scale_segmentation(segmentation, dims, crop=False):

@@ -6,12 +6,12 @@ This repository is a light version of [NetDissect](https://github.com/CSAILVisio
 
 ## Download
 * Clone the code of Network Dissection Lite from github
-```
+```bash
     git clone https://github.com/CSAILVision/NetDissect-Lite
     cd NetDissect-Lite
 ```
 * Download the Broden dataset (~1GB space) and the example pretrained model. If you already download this, you can create a symbolic link to your original dataset.
-```
+```bash
     ./script/dlbroden.sh
     ./script/dlzoo_example.sh
 ```
@@ -24,7 +24,7 @@ Note that AlexNet models work with 227x227 image input, while VGG, ResNet, GoogL
 
 * Run NetDissect 
 
-```
+```bash
     python main.py
 ```
 
@@ -32,11 +32,15 @@ Note that AlexNet models work with 227x227 image input, while VGG, ResNet, GoogL
 ## NetDissect Result
 
 * At the end of the dissection script, a report will be generated inside `result` folder that summarizes the interpretable units of the tested network. These are, respectively, the HTML-formatted report, the semantics of the units of the layer summarized as a bar graph, visualizations of all the units of the layer (using zero-indexed unit numbers), and a CSV file containing raw scores of the top matching semantic concepts in each category for each unit of the layer.
-
+```bash
+cd result/your_resutls_subfoder/html
+python -m http.server
+```
+to show results.
 
 ## Reference
 If you find the codes useful, please cite this paper
-```
+```bibtex
 @inproceedings{netdissect2017,
   title={Network Dissection: Quantifying Interpretability of Deep Visual Representations},
   author={Bau, David and Zhou, Bolei and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},
