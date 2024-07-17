@@ -11,9 +11,6 @@ import visualize.expdir as expdir
 import visualize.bargraph as bargraph
 import settings
 import numpy as np
-from skimage.color import gray2rgb
-from skimage import img_as_ubyte
-from matplotlib import pyplot as plt
 # unit,category,label,score
 
 replacements = [(re.compile(r[0]), r[1]) for r in [
@@ -26,12 +23,6 @@ def fix(s):
         s = re.sub(pattern, subst, s)
     return s
 
-# get code(from category_label dict mapping) from label name for further processing in segementation map
-def get_code_by_label_name(ds, category, label_name):
-    for label_info in ds.category_label[category]:
-        if label_info['name'] == label_name:
-            return label_info['code']
-    return None
 
 
 def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=None,
@@ -77,7 +68,7 @@ def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=
     if gridwidth is None:
         gridname = ''
         gridwidth = settings.TOPN
-        gridheight = 1 
+        gridheight = 1
     else:
         gridname = '-%d' % gridwidth
         gridheight = (settings.TOPN + gridwidth - 1) // gridwidth
@@ -92,56 +83,27 @@ def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=
         unit = int(record['unit']) - 1 # zero-based unit indexing
         imfn = 'image/%s%s-%04d.jpg' % (
                 expdir.fn_safe(layer), gridname, unit)
-        category = record['category']
-        label = record['label']
-        # get code of label from category mapping
-        label_code = get_code_by_label_name(ds, category=category, label_name = label)
-        img_path = {}
         if force or not ed.has('html/%s' % imfn):
             if verbose:
                 print('Visualizing %s unit %d' % (layer, unit))
             # Generate the top-patch image
             tiled = numpy.full(
-                ((imsize + gap) * gridheight * 2 - gap,  # 乘以 2 是因为要显示两排：一排原图，一排mask
-                (imsize + gap) * gridwidth - gap, 3), 255, dtype='uint8')
+                ((imsize + gap) * gridheight - gap,
+                 (imsize + gap) * gridwidth - gap, 3), 255, dtype='uint8')
             for x, index in enumerate(top[unit]):
-                img_path[x] = index
                 row = x // gridwidth
                 col = x % gridwidth
                 image = imread(ds.filename(index))
                 # 这里使用 order=1 来指定双线性插值，mode='reflect' 处理边界外像素
-                ft_mask = resize(features[index][unit], image.shape[:2], order=1, mode='reflect')
-                ft_mask = ft_mask > thresholds[unit]
-                ft_vis = (ft_mask[:, :, numpy.newaxis] * 0.8 + 0.2) * image
-                if ft_vis.shape[:2] != (imsize, imsize):
-                    ft_vis = resize(ft_vis, (imsize, imsize))
-                
-                gt_mask = ds.segmentation_data(category, index)
-                # preserve label we want from segementaion map and set other to 0
-                gt_mask_singel_label = np.where(gt_mask == label_code, 1, 0) # binary mask
-
-                ## due to the gt_mask is represented in segementation code, we can't do resize with interpolation first or after, which results in weird highlight
-                ## binlinear interpolation. One example: mask: (112, 112, 1), original:(224, 224, 3)
-                # gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=1, mode='reflect', preserve_range=True)
-                
-                # Use the nearest neighbor interpolation
-                gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=0, mode='reflect', preserve_range=True)
-
-                gt_vis = (gt_mask_singel_label[:, :, numpy.newaxis] * 0.8 + 0.2) * image
-                if gt_vis.shape[:2] != (imsize, imsize):
-                    gt_vis = resize(gt_vis, (imsize, imsize))
-
-                # Place the processed image in the tiled array
-                tiled[row * (imsize + gap) * 2:row * (imsize + gap) * 2 + imsize,
-                      col * (imsize + gap):col * (imsize + gap) + imsize, :] = ft_vis
-              
-                # Place the ground truth mask right below the corresponding image
-                tiled[(row * 2 + 1) * (imsize + gap):(row * 2 + 1) * (imsize + gap) + imsize,
-                      col * (imsize + gap):col * (imsize + gap) + imsize, :] = gt_vis
-            # Save the entire tiled image as one composite image
+                mask = resize(features[index][unit], image.shape[:2], order=1, mode='reflect')
+                mask = mask > thresholds[unit]
+                vis = (mask[:, :, numpy.newaxis] * 0.8 + 0.2) * image
+                if vis.shape[:2] != (imsize, imsize):
+                    vis = resize(vis, (imsize, imsize))
+                tiled[row*(imsize+gap):row*(imsize+gap)+imsize,
+                      col*(imsize+gap):col*(imsize+gap)+imsize,:] = vis
             imwrite(ed.filename('html/' + imfn), tiled)
         # Generate the wrapper HTML
-        img_path_str = ', '.join(f'{k}: {v}' for k, v in img_path.items())
         graytext = ' lowscore' if float(record['score']) < settings.SCORE_THRESHOLD else ''
         html.append('><div class="unit%s" data-order="%d %d %d">' %
                 (graytext, label_order, record['score-order'], unit + 1))
@@ -150,8 +112,7 @@ def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=
             '<span class="layername">%s</span> ' % layer +
             '<span class="unitnum">unit %d</span> ' % (unit + 1) +
             '<span class="category">(%s)</span> ' % record['category'] +
-            '<span class="iou">IoU %.2f</span>' % float(record['score']) + 
-            '<span class="img">Image Path %s</span>' % img_path_str +
+            '<span class="iou">IoU %.2f</span>' % float(record['score']) +
             '</div>')
         html.append(
             '<div class="thumbcrop"><img src="%s" height="%d"></div>' %

@@ -3,12 +3,12 @@ GPU = True                                  # running on GPU is highly suggested
 TEST_MODE = False                           # turning on the testmode means the code will run on a small dataset.
 CLEAN = True                               # set to "True" if you want to clean the temporary large files after generating result
 # using 'cvcl'
-MODEL = 'resnet50'                          # model arch: resnet18, alexnet, resnet50, densenet161
+MODEL = 'cvcl'                          # model arch: resnet18, alexnet, resnet50, densenet161
 DATASET = 'imagenet'                       # model trained on: places365 or imagenet  #!this is irrelevant for cvcl
 QUANTILE = 0.003      #0.005                      # the threshold used for activation
 SEG_THRESHOLD = 0.0002  #0.04                      # the threshold used for visualization
 SCORE_THRESHOLD = 0.0002  #0.04                      # the threshold used for IoU score (in HTML file)
-TOPN = 10                                   # to show top N image with highest activation for each unit
+TOPN = 8                                   # to show top N image with highest activation for each unit
 PARALLEL = 1                                # how many process is used for tallying (Experiments show that 1 is the fastest)
 CATAGORIES = ["object","part","scene","texture","color","material"] # concept categories that are chosen to detect: "object", "part", "scene", "material", "texture", "color"
 OUTPUT_FOLDER = "result/"+MODEL+"_"+"c"+str(len(CATAGORIES)) # result will be stored in this folder
@@ -52,7 +52,7 @@ elif MODEL == 'densenet161':
         MODEL_FILE = 'zoo/whole_densenet161_places365_python36.pth.tar'
         MODEL_PARALLEL = False
 elif MODEL == 'resnet50':
-    FEATURE_NAMES = ['layer4', 'layer3', 'layer2', 'layer1']
+    FEATURE_NAMES = ['layer1', 'layer2', 'layer3', 'layer4']
     if DATASET == 'places365':
         MODEL_FILE = 'zoo/whole_resnet50_places365_python36.pth.tar'
     MODEL_PARALLEL = False
@@ -60,7 +60,7 @@ elif MODEL == 'resnet50':
 elif MODEL == 'cvcl':
     # should be no larger than 4
     # FEATURE_NAMES = ['vision_encoder.model.layer1']
-    FEATURE_NAMES = ['vision_encoder.model.layer4', 'vision_encoder.model.layer3', 'vision_encoder.model.layer2', 'vision_encoder.model.layer1']
+    FEATURE_NAMES = ['vision_encoder.model.layer1', 'vision_encoder.model.layer2', 'vision_encoder.model.layer3', 'vision_encoder.model.layer4']
     MODEL_PARALLEL = False
     OUTPUT_FOLDER += "_l"+str(len(FEATURE_NAMES))
 
@@ -69,11 +69,11 @@ if TEST_MODE:
     BATCH_SIZE = 64
     TALLY_BATCH_SIZE = 64
     TALLY_AHEAD = 16
-    INDEX_FILE = 'index_sm.csv'
-    OUTPUT_FOLDER += "_test"
+    INDEX_FILE = 'test.csv'
+    OUTPUT_FOLDER += "test"
 else:
     WORKERS = 12
-    BATCH_SIZE = 128
-    TALLY_BATCH_SIZE = 16
-    TALLY_AHEAD = 4
+    BATCH_SIZE = 256
+    TALLY_BATCH_SIZE = 128
+    TALLY_AHEAD = 64
     INDEX_FILE = 'index.csv'

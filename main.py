@@ -32,7 +32,7 @@ if __name__ == '__main__':
         thresholds = fo.quantile_threshold(features[layer_id],savepath=f"quantile_{layer_id}.npy")
 
     ############ STEP 3: calculating IoU scores ###########
-        tally_result = fo.tally(features[layer_id],thresholds,savepath=f"tally_{layer_id}.csv.csv")
+        tally_result = fo.tally(features[layer_id],thresholds,savepath=f"tally_{layer_id}.csv")
 
     ############ STEP 4: generating results ###############
         generate_html_summary(fo.data, layer,
