@@ -125,7 +125,7 @@ def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=
                 # gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=1, mode='reflect', preserve_range=True)
                 
                 # Use the nearest neighbor interpolation
-                gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=0, mode='reflect', preserve_range=True)
+                gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=1, mode='reflect')
 
                 gt_vis = (gt_mask_singel_label[:, :, numpy.newaxis] * 0.8 + 0.2) * image
                 if gt_vis.shape[:2] != (imsize, imsize):
@@ -151,7 +151,7 @@ def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=
             '<span class="unitnum">unit %d</span> ' % (unit + 1) +
             '<span class="category">(%s)</span> ' % record['category'] +
             '<span class="iou">IoU %.2f</span>' % float(record['score']) + 
-            '<span class="img">Image Path %s</span>' % img_path_str +
+            '<span class="img">Index %s</span>' % img_path_str +
             '</div>')
         html.append(
             '<div class="thumbcrop"><img src="%s" height="%d"></div>' %

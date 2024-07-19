@@ -1,4 +1,4 @@
-name: cvcl_copy
+name: cvcl
 channels:
   - conda-forge
   - defaults
