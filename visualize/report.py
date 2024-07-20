@@ -124,8 +124,8 @@ def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=
                 ## binlinear interpolation. One example: mask: (112, 112, 1), original:(224, 224, 3)
                 # gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=1, mode='reflect', preserve_range=True)
                 
-                # Use the nearest neighbor interpolation
-                gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=1, mode='reflect')
+                # order=0 for boolean image
+                gt_mask_singel_label = resize(gt_mask_singel_label, image.shape[:2], order=0, mode='reflect')
 
                 gt_vis = (gt_mask_singel_label[:, :, numpy.newaxis] * 0.8 + 0.2) * image
                 if gt_vis.shape[:2] != (imsize, imsize):
@@ -151,8 +151,9 @@ def generate_html_summary(ds, layer, maxfeature=None, features=None, thresholds=
             '<span class="unitnum">unit %d</span> ' % (unit + 1) +
             '<span class="category">(%s)</span> ' % record['category'] +
             '<span class="iou">IoU %.2f</span>' % float(record['score']) + 
-            '<span class="img">Index %s</span>' % img_path_str +
+            '<span class="full-index" style="display:none;">%s</span>' % img_path_str +
             '</div>')
+        html.append('<span class="img"></span>')
         html.append(
             '<div class="thumbcrop"><img src="%s" height="%d"></div>' %
             (imfn, imscale))
@@ -226,6 +227,9 @@ html_prefix = '''
 .histogram {
   text-align: center;
   margin-top: 3px;
+}
+.img::after {
+    content: '';
 }
 .img-wrapper {
   text-align: center;
@@ -307,7 +311,7 @@ html_suffix = '''
 </div>
 <script>
 $('img:not([data-nothumb])[src]').wrap(function() {
-  var result = $('<a data-toggle="lightbox">')
+  var result = $('<a data-toggle="lightbox">');
   result.attr('href', $(this).attr('src'));
   var caption = $(this).closest('figure').find('figcaption').text();
   if (!caption && $(this).closest('.citation').length) {
@@ -319,7 +323,8 @@ $('img:not([data-nothumb])[src]').wrap(function() {
   var title = $(this).attr('title');
   if (!title) {
     title = $(this).closest('td').find('.unit,.score').map(function() {
-      return $(this).text(); }).toArray().join('; ');
+      return $(this).text();
+    }).toArray().join('; ');
   }
   if (title) {
     result.attr('data-title', title);
@@ -327,17 +332,23 @@ $('img:not([data-nothumb])[src]').wrap(function() {
   return result;
 });
 $(document).on('click', '[data-toggle=lightbox]', function(event) {
+    var fullIndex = $(this).closest('.unit').find('.full-index').text();
+    console.log('Full Index:', fullIndex); // 调试信息
     $('#lightbox img').attr('src', $(this).attr('href'));
     $('#lightbox .modal-title').text($(this).data('title') ||
        $(this).closest('.unit').find('.unitlabel').text());
-    $('#lightbox .footer-caption').text($(this).data('footer') ||
-       $(this).closest('.unit').find('.info').text());
+    $('#lightbox .footer-caption').html(
+       ( $(this).data('footer') || $(this).closest('.unit').find('.info').text() ) +
+       '<br><small>Full Index: ' + fullIndex + '</small>');
     event.preventDefault();
     $('#lightbox').modal();
     $('#lightbox img').closest('div').scrollLeft(0);
 });
 $(document).on('keydown', function(event) {
-    $('#lightbox').modal('hide');
+    // Only close the modal on Escape key
+    if (event.key === "Escape") {
+        $('#lightbox').modal('hide');
+    }
 });
 $(document).on('click', '.sortby', function(event) {
     var sortindex = +$(this).data('index');
