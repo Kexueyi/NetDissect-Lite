@@ -3,7 +3,7 @@ GPU = True                                  # running on GPU is highly suggested
 TEST_MODE = False                           # turning on the testmode means the code will run on a small dataset.
 CLEAN = True                               # set to "True" if you want to clean the temporary large files after generating result
 # using 'cvcl'
-MODEL = 'cvcl'                          # model arch: resnet18, alexnet, resnet50, densenet161
+MODEL = 'resnet50'                          # model arch: resnet18, alexnet, resnet50, densenet161
 DATASET = 'imagenet'                       # model trained on: places365 or imagenet  #!this is irrelevant for cvcl
 QUANTILE = 0.003      #0.005                      # the threshold used for activation
 SEG_THRESHOLD = 0.0002  #0.04                      # the threshold used for visualization
@@ -73,7 +73,7 @@ if TEST_MODE:
     OUTPUT_FOLDER += "test"
 else:
     WORKERS = 12
-    BATCH_SIZE = 256 # 128
-    TALLY_BATCH_SIZE = 128 # 16
-    TALLY_AHEAD = 64 # 4
+    BATCH_SIZE = 128 # 128
+    TALLY_BATCH_SIZE = 16 # 16
+    TALLY_AHEAD = 4 # 4
     INDEX_FILE = 'index.csv'
