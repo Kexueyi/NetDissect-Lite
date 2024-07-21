@@ -5,9 +5,9 @@ CLEAN = True                               # set to "True" if you want to clean 
 # using 'cvcl'
 MODEL = 'cvcl'                          # model arch: resnet18, alexnet, resnet50, densenet161
 DATASET = 'imagenet'                       # model trained on: places365 or imagenet  #!this is irrelevant for cvcl
-QUANTILE = 0.003      #0.005                      # the threshold used for activation
-SEG_THRESHOLD = 0.0002  #0.04                      # the threshold used for visualization
-SCORE_THRESHOLD = 0.0002  #0.04                      # the threshold used for IoU score (in HTML file)
+QUANTILE = 0.005      #0.005                      # the threshold used for activation
+SEG_THRESHOLD = 0.04  #0.04                      # the threshold used for visualization
+SCORE_THRESHOLD = 0.04  #0.04                      # the threshold used for IoU score (in HTML file)
 TOPN = 8                                   # to show top N image with highest activation for each unit
 PARALLEL = 1                                # how many process is used for tallying (Experiments show that 1 is the fastest)
 CATAGORIES = ["object","part","scene","texture","color","material"] # concept categories that are chosen to detect: "object", "part", "scene", "material", "texture", "color"
@@ -73,7 +73,13 @@ if TEST_MODE:
     OUTPUT_FOLDER += "test"
 else:
     WORKERS = 12
-    BATCH_SIZE = 256 # 128
-    TALLY_BATCH_SIZE = 128 # 16
-    TALLY_AHEAD = 64 # 4
     INDEX_FILE = 'index.csv'
+    if MODEL == 'cvcl':
+        BATCH_SIZE = 512 # 128
+        TALLY_BATCH_SIZE = 256 # 16
+        TALLY_AHEAD = 128 # 4
+    else:
+        BATCH_SIZE = 128 # 128
+        TALLY_BATCH_SIZE = 16 # 16
+        TALLY_AHEAD = 4 # 4
+

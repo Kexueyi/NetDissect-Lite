@@ -27,7 +27,7 @@ class FeatureOperator:
         self.loader = SegmentationPrefetcher(self.data,categories=['image'],once=True,batch_size=settings.BATCH_SIZE)
         self.mean = [109.5388,118.6897,124.6901]
 
-    def feature_extraction(self, model=None, memmap=True):
+    def feature_extraction(self, device, model=None, memmap=True):
         loader = self.loader
         # extract the max value activaiton for each image
         maxfeatures = [None] * len(settings.FEATURE_NAMES)
@@ -66,6 +66,7 @@ class FeatureOperator:
                 input = input.cuda()
             with torch.no_grad():
                 input_var = V(input)
+            input_var = input_var.to(device)
             #! CVCL implementation
             if settings.MODEL == 'cvcl':
                 logit = model.encode_image(input_var)

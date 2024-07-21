@@ -4,7 +4,6 @@ from feature_operation import hook_feature,FeatureOperator
 from visualize.report import generate_html_summary
 from util.clean import clean
 from util.save_settings import save_settings
-import torch
 import argparse
 
 parser = argparse.ArgumentParser(description='Net-Dissect')
@@ -25,7 +24,7 @@ if __name__ == '__main__':
     ### Add: save args ###
     save_settings()
     ############ STEP 1: feature extraction ###############
-    features, maxfeature = fo.feature_extraction(model=model)
+    features, maxfeature = fo.feature_extraction(device=device, model=model)
 
     for layer_id,layer in enumerate(settings.FEATURE_NAMES):
     ############ STEP 2: calculating threshold ############
