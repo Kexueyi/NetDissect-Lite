@@ -3,6 +3,7 @@ import torch
 import torchvision
 from huggingface_hub import hf_hub_download
 from multimodal.multimodal_lit import MultiModalLitModel
+import clip
 
 def loadmodel(hook_fn):
     # Load CVCL
@@ -10,6 +11,8 @@ def loadmodel(hook_fn):
         checkpoint_name = "cvcl_s_dino_resnext50_embedding"
         checkpoint = hf_hub_download(repo_id="wkvong/"+checkpoint_name, filename=checkpoint_name+".ckpt")
         model = MultiModalLitModel.load_from_checkpoint(checkpoint_path=checkpoint)
+    elif settings.MODEL == 'cilp_res':
+        model, _ = clip.load("RN50", device="cuda")
     else:
         # original model load
         if settings.MODEL_FILE is None:

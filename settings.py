@@ -63,6 +63,10 @@ elif MODEL == 'cvcl':
     FEATURE_NAMES = ['vision_encoder.model.layer1', 'vision_encoder.model.layer2', 'vision_encoder.model.layer3', 'vision_encoder.model.layer4']
     MODEL_PARALLEL = False
     OUTPUT_FOLDER += "_l"+str(len(FEATURE_NAMES))
+elif MODEL == 'cilp_res':
+    FEATURE_NAMES = ['visual.layer1', 'visual.layer2', 'visual.layer3', 'visual.layer4']
+    MODEL_PARALLEL = False
+    OUTPUT_FOLDER += "_l"+str(len(FEATURE_NAMES))
 
 if TEST_MODE:
     WORKERS = 1
@@ -74,7 +78,7 @@ if TEST_MODE:
 else:
     WORKERS = 12
     INDEX_FILE = 'index.csv'
-    if MODEL == 'cvcl':
+    if MODEL == 'cvcl' or MODEL == 'cilp_res':
         BATCH_SIZE = 512 # 128
         TALLY_BATCH_SIZE = 256 # 16
         TALLY_AHEAD = 128 # 4
