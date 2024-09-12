@@ -71,6 +71,8 @@ class FeatureOperator:
             if settings.MODEL == 'cvcl':
                 logit = model.encode_image(input_var)
                 # print(f"CVCL model output shape: {logit.shape}")
+            elif settings.MODEL == 'clip':
+                logit = model.encode_image(input_var)
             else:
                 logit = model.forward(input_var)
             while np.isnan(logit.data.cpu().max()):
