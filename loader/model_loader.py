@@ -11,7 +11,7 @@ def loadmodel(hook_fn):
         checkpoint_name = "cvcl_s_dino_resnext50_embedding"
         checkpoint = hf_hub_download(repo_id="wkvong/"+checkpoint_name, filename=checkpoint_name+".ckpt")
         model = MultiModalLitModel.load_from_checkpoint(checkpoint_path=checkpoint)
-    elif settings.MODEL == 'cilp_res':
+    elif settings.MODEL == 'clip':
         model, _ = clip.load("RN50", device="cuda")
     else:
         # original model load

@@ -3,7 +3,7 @@ GPU = True                                  # running on GPU is highly suggested
 TEST_MODE = False                           # turning on the testmode means the code will run on a small dataset.
 CLEAN = True                               # set to "True" if you want to clean the temporary large files after generating result
 # using 'cvcl'
-MODEL = 'cvcl'                          # model arch: resnet18, alexnet, resnet50, densenet161
+MODEL = 'clip'                          # model arch: resnet18, alexnet, resnet50, densenet161
 DATASET = 'imagenet'                       # model trained on: places365 or imagenet  #!this is irrelevant for cvcl
 QUANTILE = 0.005      #0.005                      # the threshold used for activation
 SEG_THRESHOLD = 0.04  #0.04                      # the threshold used for visualization
@@ -63,7 +63,7 @@ elif MODEL == 'cvcl':
     FEATURE_NAMES = ['vision_encoder.model.layer1', 'vision_encoder.model.layer2', 'vision_encoder.model.layer3', 'vision_encoder.model.layer4']
     MODEL_PARALLEL = False
     OUTPUT_FOLDER += "_l"+str(len(FEATURE_NAMES))
-elif MODEL == 'cilp_res':
+elif MODEL == 'clip':
     FEATURE_NAMES = ['visual.layer1', 'visual.layer2', 'visual.layer3', 'visual.layer4']
     MODEL_PARALLEL = False
     OUTPUT_FOLDER += "_l"+str(len(FEATURE_NAMES))
@@ -78,7 +78,7 @@ if TEST_MODE:
 else:
     WORKERS = 12
     INDEX_FILE = 'index.csv'
-    if MODEL == 'cvcl' or MODEL == 'cilp_res':
+    if MODEL == 'cvcl' or MODEL == 'clip':
         BATCH_SIZE = 512 # 128
         TALLY_BATCH_SIZE = 256 # 16
         TALLY_AHEAD = 128 # 4
