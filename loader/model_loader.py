@@ -4,6 +4,8 @@ import torchvision
 from huggingface_hub import hf_hub_download
 from multimodal.multimodal_lit import MultiModalLitModel
 import clip
+from torchvision.models import resnet50, resnext50_32x4d, ResNeXt50_32X4D_Weights
+
 
 def loadmodel(hook_fn):
     # Load CVCL
@@ -13,6 +15,8 @@ def loadmodel(hook_fn):
         model = MultiModalLitModel.load_from_checkpoint(checkpoint_path=checkpoint)
     elif settings.MODEL == 'clip':
         model, _ = clip.load("RN50", device="cuda")
+    elif settings.MODEL == 'resnext':
+        model = resnext50_32x4d(weights=ResNeXt50_32X4D_Weights.DEFAULT).to(device="cuda")
     else:
         # original model load
         if settings.MODEL_FILE is None:

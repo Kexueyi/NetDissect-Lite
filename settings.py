@@ -57,6 +57,10 @@ elif MODEL == 'resnet50':
         MODEL_FILE = 'zoo/whole_resnet50_places365_python36.pth.tar'
     MODEL_PARALLEL = False
     OUTPUT_FOLDER += "_l"+str(len(FEATURE_NAMES))
+elif MODEL == 'resnext':
+    FEATURE_NAMES = ['layer1', 'layer2', 'layer3', 'layer4']
+    MODEL_PARALLEL = False
+    OUTPUT_FOLDER += "_l"+str(len(FEATURE_NAMES))
 elif MODEL == 'cvcl':
     # should be no larger than 4
     # FEATURE_NAMES = ['vision_encoder.model.layer1']
